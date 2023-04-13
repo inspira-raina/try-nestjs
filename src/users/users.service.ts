@@ -11,7 +11,7 @@ import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
-import { parseArgs } from 'util';
+import { GetUserDTO } from './dto/get-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -33,8 +33,40 @@ export class UsersService {
     }
   }
 
-  async findAll(): Promise<any> {
-    return this.repositoryUser.find();
+  async findAll(
+    getUserDTO: GetUserDTO,
+  ): Promise<{ list: UserEntity[]; count: number }> {
+    try {
+      const query = this.repositoryUser.createQueryBuilder('user');
+      query.where('deleted_at = null');
+      if (getUserDTO.search !== undefined) {
+        query.where('( user.name ilike :search OR user.email ilike :search )', {
+          search: `%${getUserDTO.search}%`,
+        });
+      }
+      if (getUserDTO.is_active !== undefined) {
+        query.andWhere(' user.is_active = :is_active ', {
+          is_active: getUserDTO.is_active,
+        });
+      }
+      if (getUserDTO.order && getUserDTO.sort) {
+        query.orderBy(getUserDTO.sort, getUserDTO.order);
+      } else {
+        query.orderBy('created_at', 'DESC');
+      }
+      query.take(getUserDTO.size);
+      query.skip(getUserDTO.page * getUserDTO.size);
+
+      const result = await query.getManyAndCount();
+      const userListCount = {
+        list: result[0],
+        count: result[1],
+      };
+      return userListCount;
+    } catch (error) {
+      Logger.error(error.message, '', this.constructor.name);
+      this.responseService.throwError(error);
+    }
   }
 
   async findOne(id: number): Promise<UserEntity> {

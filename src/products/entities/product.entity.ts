@@ -1,3 +1,4 @@
+import { OrderItemsEntity } from 'src/orders/entities/order-items.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -5,6 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -26,6 +28,9 @@ export class ProductEntity {
 
   @Column({ nullable: true })
   is_active: boolean;
+
+  @OneToMany(() => OrderItemsEntity, (orderItems) => orderItems.product)
+  orderItems: OrderItemsEntity[];
 
   @CreateDateColumn({
     type: 'timestamptz',

@@ -11,12 +11,15 @@ import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
 import { CreateOrderDTO } from './dto/create-order.dto';
 import { UpdateOrderDTO } from './dto/update-order.dto';
+import { OrderItemsEntity } from './entities/order-items.entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(OrderEntity)
     private readonly orderRepository: Repository<OrderEntity>,
+    @InjectRepository(OrderItemsEntity)
+    private readonly orderItemRepository: Repository<OrderItemsEntity>,
     private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
   ) {}
@@ -41,7 +44,7 @@ export class OrdersService {
     return orderData;
   }
 
-  async getOrderById(id: number): Promise<any> {
+  async findOne(id: number): Promise<any> {
     try {
       const orderDetail = this.orderRepository
         .createQueryBuilder('order')
@@ -59,6 +62,49 @@ export class OrdersService {
         );
       }
       return orderDetail;
+    } catch (error) {
+      Logger.error(error.message, '', this.constructor.name);
+      this.responseService.throwError(error);
+    }
+  }
+
+  async findOneByUser(userId: number): Promise<any> {
+    try {
+      const userOrders = this.orderRepository.findBy({ user_id: userId });
+      if (!userOrders) {
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            [this.messageService.getErrorMessage('id', 'order.id.not_found')],
+            'Bad Request',
+          ),
+        );
+      }
+      return userOrders;
+    } catch (error) {
+      Logger.error(error.message, '', this.constructor.name);
+      this.responseService.throwError(error);
+    }
+  }
+
+  async getOrderItem(orderId: number): Promise<any> {
+    try {
+      const orderItems = this.orderItemRepository
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.id.', 'product')
+        .where('product.id = :orderId', { orderId: orderId })
+        .getMany();
+
+      if (!orderItems) {
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            [this.messageService.getErrorMessage('id', 'order.id.not_found')],
+            'Bad Request',
+          ),
+        );
+      }
+      return orderItems;
     } catch (error) {
       Logger.error(error.message, '', this.constructor.name);
       this.responseService.throwError(error);

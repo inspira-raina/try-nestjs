@@ -36,10 +36,24 @@ export class OrdersController {
   }
 
   @Get(':id')
-  async getOrderById(
+  async findOne(
     @Param('id') id: number,
   ): Promise<ResponseSuccessSingleInterface> {
-    const result = await this.ordersService.getOrderById(id);
+    const result = await this.ordersService.findOne(id);
+    return this.responseService.success(result);
+  }
+
+  @Get(':id/user')
+  async findOneByUser(
+    @Param('id') userId: number,
+  ): Promise<ResponseSuccessSingleInterface> {
+    const result = await this.ordersService.findOneByUser(userId);
+    return this.responseService.success(result);
+  }
+
+  @Get(':id/products')
+  async getOrderItem(@Param('id') orderId: number): Promise<any> {
+    const result = await this.ordersService.getOrderItem(orderId);
     return this.responseService.success(result);
   }
 

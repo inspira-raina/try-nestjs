@@ -33,14 +33,17 @@ export class UserEntity {
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  created_at: Date | string;
+  created_at: Date;
 
   @UpdateDateColumn({
     type: 'timestamptz',
     nullable: true,
   })
-  updated_at: Date | string;
+  updated_at: Date;
 
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | string;
+  @DeleteDateColumn({
+    type: 'timestamptz',
+    nullable: true,
+  })
+  deleted_at: Date;
 }
